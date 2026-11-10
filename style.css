@@ -1,0 +1,990 @@
+/* ============================================================
+   planC base — style.css
+   terras_planC の x-dc renderVals() を素の CSS に書き起こしたもの。
+   モバイルファースト：素の指定 = 元コードの mob (window.innerWidth < 768) 側、
+   @media (min-width: 768px) = PC 側。
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   :root  デザイントークン
+   濃色地の差し替えは --deep と --deep-rgb を必ずセットで変える。
+   （--deep-rgb は rgba() のグラデーション／半透明に使うため）
+     緑   #1C2B26 →  28,43,38
+     紺   #1B2536 →  27,37,54
+     臙脂 #2E1B22 →  46,27,34
+     茶   #2A211C →  42,33,28
+   ------------------------------------------------------------ */
+:root {
+  /* ヘアサロン ramuuu.上石神井 配色
+     ご指定「内観の壁の薄い水色を基調。明るい雰囲気」。
+     地は店内の塗り壁の淡い青みに合わせ、アクセントは実測したチェアの
+     オレンジ #B66735 を、淡い地で 4.5 を超えるまで落とした #9A5527。
+     planC 既定は「濃色地＋ゴールド」なので明暗を反転させている。
+     反転にともなう上書きはファイル末尾の調整ブロックにまとめた。 */
+  --deep:       #EFF1F7;   /* 主たる地 = 淡い水色 */
+  --deep-rgb:   239, 241, 247;
+  --darker:     #E3E7F1;   /* ACCESS の地（1段深い水色） */
+  --gold:       #9A5527;   /* チェアのオレンジ（淡地 5.02／白 5.67） */
+  --gold-rgb:   154, 85, 39;
+  --btn:        #8A4A22;   /* ボタン地。白文字 6.81 */
+  --light:      #2D3140;   /* 本文（淡地 11.44） */
+  --light-rgb:  45, 49, 64;
+  --menu-card:  #FFFFFF;
+  --white:      #FFFFFF;
+  --gray:       #B9C0D2;   /* 罫線専用 */
+  --gray-rgb:   185, 192, 210;
+  --rule:       1px solid rgba(185, 192, 210, 0.75);
+  --sec-light-bg: #E4E8F3;
+  --footer-bg:  #2F3446;
+
+  --gold-border: 1px solid rgba(var(--gray-rgb), 0.9);
+  --gold-hair:   1px solid rgba(var(--gray-rgb), 0.6);
+
+  --font-jp: "Noto Serif JP", serif;
+  --font-en: "Playfair Display", serif;
+
+  --header-h: 80px;
+  --sec-pad: 112px 24px;          /* mob */
+  --shadow-card: 0 20px 44px -26px rgba(45, 49, 64, 0.35);
+}
+
+@media (min-width: 768px) {
+  :root { --sec-pad: 190px 24px; } /* PC */
+}
+
+/* ------------------------------------------------------------
+   base
+   ------------------------------------------------------------ */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: var(--header-h); }
+
+body {
+  margin: 0;
+  font-family: var(--font-jp);
+  background: var(--deep);
+  color: var(--light);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;              /* 縦組みのはみ出し事故に対する最後の受け皿 */
+}
+
+a { color: var(--gold); text-decoration: none; }
+a:hover { color: var(--light); }
+img { display: block; max-width: 100%; }
+::selection { background: var(--gold); color: var(--deep); }
+
+h1, h2, h3, p, dl, dd, ol, ul, figure { margin: 0; }
+ol, ul { padding: 0; list-style: none; }
+
+/* ------------------------------------------------------------
+   reveal（main.js の IntersectionObserver と対）
+   JS が動かない環境では最初から見えている状態を維持する。
+   ------------------------------------------------------------ */
+[data-reveal] {
+  transition: opacity 1.1s ease-out, transform 1.1s ease-out;
+}
+html.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+}
+html.js [data-reveal].is-shown {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.js [data-reveal] { opacity: 1; transform: none; transition: none; }
+}
+
+/* ============================================================
+   HEADER
+   renderVals: navUl → .nav-list
+   ============================================================ */
+.site-header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 50;
+  background: rgba(var(--deep-rgb), 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(var(--gold-rgb), 0.2);
+}
+.header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand {
+  font-family: var(--font-en);
+  font-style: italic;
+  font-size: 24px;
+  color: var(--gold);
+  letter-spacing: 0.15em;
+}
+
+/* --- PC ナビ --- */
+.gnav { display: flex; align-items: center; }
+.nav-list {
+  display: none;                    /* mob: navUl.display = 'none' */
+  align-items: center;
+  gap: 32px;
+  font-size: 13px;
+  letter-spacing: 0.15em;
+}
+.nav-list a { color: rgba(var(--light-rgb), 0.85); transition: color .3s; }
+.nav-list a:hover { color: var(--gold); }
+.nav-sep { width: 1px; height: 16px; background: rgba(var(--gold-rgb), 0.3); }
+
+.btn-reserve {
+  background: var(--btn);
+  color: var(--light);
+  padding: 8px 24px;
+  border-radius: 2px;
+  font-size: 13px;
+  letter-spacing: 0.15em;
+  transition: background .3s;
+}
+.btn-reserve:hover { background: var(--gold); color: var(--light); }
+
+/* --- ハンバーガー（mob のみ） --- */
+.nav-toggle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  width: 44px;
+  height: 44px;
+  padding: 0 10px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.nav-toggle span {
+  display: block;
+  height: 1px;
+  background: var(--gold);
+  transition: transform .3s, opacity .3s;
+}
+.nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* mob 展開時のドロワー */
+/* ★ナビの切替幅だけ 768 → 860（2026-10-06）。
+   768px では横並びのナビが 37px はみ出していた（実測）。
+   他の min-width: 768px（組版・レイアウト）は変えない。 */
+@media (max-width: 859px) {
+  .gnav {
+    position: fixed;
+    top: var(--header-h);
+    left: 0;
+    width: 100%;
+    max-height: calc(100vh - var(--header-h));
+    overflow-y: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 24px;
+    background: rgba(var(--deep-rgb), 0.98);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(var(--gold-rgb), 0.2);
+    transform: translateY(-12px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .3s, transform .3s, visibility .3s;
+  }
+  .gnav.is-open { opacity: 1; visibility: visible; transform: none; }
+  .gnav.is-open .nav-list {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    font-size: 14px;
+  }
+  .nav-list li:not(.nav-sep) a { display: block; padding: 16px 4px; }
+  .nav-sep { width: 100%; height: 1px; }
+  .btn-reserve { margin-top: 24px; text-align: center; padding: 14px 24px; }
+}
+
+@media (min-width: 860px) {
+  .nav-toggle { display: none; }
+  .nav-list { display: flex; }        /* PC: navUl.display = 'flex' */
+  .btn-reserve { margin-left: 40px; }
+}
+
+/* ============================================================
+   セクション共通
+   renderVals: secDark / secDeep / secLight / secReserve
+   ============================================================ */
+.sec { padding: var(--sec-pad); position: relative; }
+.sec-dark  { background: var(--darker); }
+.sec-deep  { background: var(--deep); }
+.sec-light { background: var(--light); color: var(--deep); }
+.sec-reserve {
+  background: var(--deep);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sec-inner { margin: 0 auto; }
+.sec-inner--about { max-width: 1000px; display: flex; flex-direction: column; align-items: center; }
+.sec-inner--style { max-width: 1280px; }
+.sec-inner--flow  { max-width: 1150px; }
+.sec-inner--menu  { max-width: 900px; }
+
+/* headBlock → .head-block */
+.head-block {
+  font-family: var(--font-en);
+  font-size: 30px;                     /* mob */
+  font-weight: 400;
+  margin: 0 auto 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+@media (min-width: 768px) { .head-block { font-size: 38px; } }
+
+.head-sub {
+  font-family: var(--font-jp);
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  /* 元 0.6。13px の文字で 4.06 しか出ず本文基準に届かないため 0.78 に引き上げ。 */
+  color: rgba(var(--light-rgb), 0.78);   /* 濃色地セクション */
+}
+/* aboutSubTitleColor: 明色地の上では deepRgba(0.6) */
+/* 元 0.6。明色地でも 13px では届かないため 0.78 に。 */
+.sec-light .head-sub { color: rgba(var(--deep-rgb), 0.78); }
+
+.head-main { font-family: var(--font-en); font-style: italic; color: var(--gold); }
+.head-rule {
+  display: block;
+  width: 1px;
+  height: 48px;
+  background: rgba(var(--gold-rgb), 0.4);
+  margin-top: 16px;
+}
+
+/* ============================================================
+   HERO
+   renderVals: heroSection / heroOverlay / heroCopyWrap / heroFrame
+               heroTitle / heroVertical
+   ============================================================ */
+.hero {
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;              /* mob */
+  justify-content: flex-end;
+  align-items: center;
+}
+@media (min-width: 768px) {
+  .hero { flex-direction: row; justify-content: flex-start; align-items: stretch; }
+}
+
+.hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+.hero-bg img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  filter: brightness(0.85) contrast(1.25);
+}
+/* heroOverlay: mob は下から / PC は左から濃色をかぶせる */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    to top,
+    rgba(var(--deep-rgb), 0.95),
+    rgba(var(--deep-rgb), 0.6) 45%,
+    transparent
+  );
+}
+@media (min-width: 768px) {
+  .hero-overlay {
+    background-image: linear-gradient(
+      to right,
+      rgba(var(--deep-rgb), 0.95),
+      rgba(var(--deep-rgb), 0.6) 45%,
+      transparent
+    );
+  }
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 10;
+  width: 100%;                          /* mob */
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 160px 32px 80px;
+}
+@media (min-width: 768px) {
+  .hero-copy { width: 55%; padding: 140px 64px 80px; }
+}
+
+.hero-frame {
+  border: var(--gold-border);
+  padding: 40px;                        /* mob */
+  position: relative;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  background: rgba(var(--deep-rgb), 0.2);
+  box-shadow: var(--shadow-card);
+  max-width: 100%;
+}
+@media (min-width: 768px) { .hero-frame { padding: 96px; } }
+
+.hero-frame-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 44px;
+}
+
+/* 四隅のコーナーマーク */
+.corner { position: absolute; width: 12px; height: 12px; }
+.corner-tl { top: 0; left: 0;  border-top: 1px solid var(--gold); border-left: 1px solid var(--gold); }
+.corner-tr { top: 0; right: 0; border-top: 1px solid var(--gold); border-right: 1px solid var(--gold); }
+.corner-bl { bottom: 0; left: 0;  border-bottom: 1px solid var(--gold); border-left: 1px solid var(--gold); }
+.corner-br { bottom: 0; right: 0; border-bottom: 1px solid var(--gold); border-right: 1px solid var(--gold); }
+
+.hero-title {
+  font-family: var(--font-en);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 40px;                      /* mob */
+  color: var(--gold);
+  letter-spacing: 0.2em;
+  text-align: center;
+}
+@media (min-width: 768px) { .hero-title { font-size: 60px; } }
+
+/* ⚠ 縦組み。1行 = 1列。行数 × font-size × line-height ぶん横に伸びる。
+   2行を目安に。3行を超えるならフレームの padding を詰めること。 */
+.hero-vert {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 16px;
+  line-height: 2;
+  letter-spacing: 0.4em;
+  color: var(--light);
+  height: 220px;
+  max-height: 50vh;
+}
+@media (min-width: 480px) { .hero-vert { font-size: 18px; height: 240px; } }
+@media (min-width: 768px) { .hero-vert { font-size: 22px; height: 300px; } }
+
+/* ============================================================
+   ABOUT
+   renderVals: aboutVertical → .about-vert / aboutBoxBg → .about-photo-frame
+   ============================================================ */
+
+/* ⚠⚠ 最重要 ⚠⚠
+   縦書きでは 1行 = 1列。必要な横幅 ≒ 行数 × font-size × line-height。
+   9行 / 15px / 2.3 → 約 310px。375px から左右パディング48pxを引いた 327px に収まる。
+   本文は9行以内。<br><br>（空行）も1列を消費するので使わない。
+   書いたら必ず実測すること:
+     document.querySelector('.about-vert').getBoundingClientRect().width          */
+.about-vert {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 15px;
+  line-height: 2.3;
+  letter-spacing: 0.15em;
+  height: 340px;
+  text-align: center;
+  margin: 0 auto 96px;
+  max-width: 100%;
+}
+@media (min-width: 480px) { .about-vert { font-size: 17px; line-height: 2.7; height: 360px; } }
+@media (min-width: 768px) { .about-vert { font-size: 19px; line-height: 3;   height: 400px; } }
+
+.about-photo { position: relative; width: 100%; max-width: 768px; }
+.about-photo-frame {
+  border: var(--gold-border);
+  padding: 20px;
+  background: var(--white);
+  position: relative;
+  z-index: 10;
+}
+.about-photo-frame img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  filter: brightness(0.8);
+}
+
+/* ============================================================
+   STYLE
+   renderVals: ladiesGrid / card2 / card3 / card4 / mensGrid / mensImg
+   ============================================================ */
+.style-group { margin-bottom: 112px; }
+.style-group:last-child { margin-bottom: 0; }
+
+.style-group-title {
+  text-align: center;
+  font-family: var(--font-en);
+  font-weight: 400;
+  font-size: 24px;
+  color: rgba(var(--light-rgb), 0.8);
+  margin: 0 0 72px;
+  letter-spacing: 0.2em;
+}
+
+.ladies-grid {
+  display: grid;
+  grid-template-columns: 1fr;           /* mob */
+  column-gap: 0;
+  row-gap: 56px;
+  max-width: 900px;
+  margin: 0 auto;
+  justify-items: center;
+}
+@media (min-width: 768px) {
+  .ladies-grid { grid-template-columns: 1fr 1fr; column-gap: 96px; row-gap: 128px; }
+  /* card2 / card3 / card4 の段差配置。mob では 0 */
+  .ladies-grid .style-card:nth-child(2) { margin-top: 96px; }
+  .ladies-grid .style-card:nth-child(3) { margin-top: -48px; }
+  .ladies-grid .style-card:nth-child(4) { margin-top: 48px; }
+}
+
+.style-card { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.style-card-frame {
+  border: var(--gold-border);
+  padding: 12px;
+  background: var(--darker);
+  width: 100%;
+  max-width: 384px;
+}
+.style-card-frame img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  filter: brightness(0.9);
+}
+.style-card-cap {
+  margin-top: 32px;
+  text-align: center;
+  border-top: 1px solid rgba(var(--gold-rgb), 0.3);
+  padding-top: 16px;
+  width: 192px;
+}
+.cap-en { font-family: var(--font-en); color: var(--gold); letter-spacing: 0.15em; }
+.cap-ja { font-size: 12px; color: rgba(var(--light-rgb), 0.6); margin-top: 8px; letter-spacing: 0.15em; }
+
+/* --- MENS（不要なら HTML 側のブロックごと削除） --- */
+.mens-grid {
+  display: grid;
+  grid-template-columns: 1fr;           /* mob */
+  gap: 40px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+@media (min-width: 768px) {
+  .mens-grid { grid-template-columns: repeat(3, 1fr); gap: 48px; }
+}
+.style-card--mens .style-card-frame { padding: 8px; max-width: none; }
+/* grayscaleMens = true 相当。.style-card-frame img より詳細度を上げる必要がある */
+.style-card-frame img.mens-img { filter: brightness(0.9) grayscale(0.3); }
+.style-card--mens .style-card-cap { margin-top: 24px; padding-top: 12px; width: 128px; }
+.style-card--mens .cap-en { font-size: 14px; }
+
+/* ============================================================
+   FLOW
+   renderVals: flowLine / flowSteps / stepRow / railNum / mobNum / stepImg
+   ============================================================ */
+.flow-wrap { position: relative; }
+
+/* 左のレール線。mob では非表示 */
+.flow-line { display: none; }
+@media (min-width: 768px) {
+  .flow-line {
+    display: block;
+    position: absolute;
+    top: 0; bottom: 0; left: 31px;
+    width: 1px;
+    background: rgba(var(--gold-rgb), 0.3);
+  }
+}
+
+.flow-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 64px;                            /* mob */
+  position: relative;
+}
+@media (min-width: 768px) { .flow-steps { gap: 112px; } }
+
+.step-row {
+  display: flex;
+  flex-direction: column;               /* mob */
+  gap: 32px;
+  align-items: center;
+}
+@media (min-width: 768px) { .step-row { flex-direction: row; } }
+
+/* railNum: PC のみ。背景を明色地で塗ってレール線を分断する */
+.step-rail-num { display: none; }
+@media (min-width: 768px) {
+  .step-rail-num {
+    display: block;
+    width: 64px;
+    flex-shrink: 0;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    background: var(--light);
+    padding: 12px 0;
+    font-family: var(--font-en);
+    font-style: italic;
+    font-size: 30px;
+    color: var(--gold);
+  }
+}
+
+/* mobNum: mob のみ */
+.step-mob-num {
+  font-family: var(--font-en);
+  font-style: italic;
+  font-size: 30px;
+  color: var(--gold);
+}
+@media (min-width: 768px) { .step-mob-num { display: none; } }
+
+.step-body { flex: 1; width: 100%; }
+.step-title {
+  font-size: 20px;
+  font-weight: 400;
+  margin: 0 0 16px;
+  letter-spacing: 0.15em;
+  border-bottom: 1px solid rgba(var(--deep-rgb), 0.1);
+  padding-bottom: 16px;
+}
+.step-text { font-size: 14px; line-height: 2; color: rgba(var(--deep-rgb), 0.8); }
+
+.step-img {
+  width: 100%;                          /* mob */
+  flex-shrink: 0;
+  border: var(--gold-border);
+  padding: 8px;
+  background: var(--white);
+}
+@media (min-width: 768px) { .step-img { width: 44%; } }
+.step-img img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
+
+/* ============================================================
+   MENU
+   renderVals: menuCard → .menu-card
+   ============================================================ */
+.menu-card {
+  border: var(--gold-border);
+  padding: 32px;                        /* mob */
+  background: var(--menu-card);
+  box-shadow: var(--shadow-card);
+  position: relative;
+}
+@media (min-width: 768px) { .menu-card { padding: 64px; } }
+
+.menu-lead {
+  text-align: center;
+  font-size: 14px;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+  margin: 0 0 56px;
+}
+.menu-list { display: flex; flex-direction: column; gap: 48px; }
+.menu-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid rgba(var(--gold-rgb), 0.2);
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  gap: 16px;
+}
+.menu-item-title { font-size: 18px; font-weight: 400; letter-spacing: 0.12em; }
+.menu-item-price {
+  font-family: var(--font-en);
+  font-style: italic;
+  font-size: 20px;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.menu-item-price span { font-size: 12px; font-style: normal; color: rgba(var(--light-rgb), 0.6); }
+.menu-item-note { font-size: 12px; color: rgba(var(--light-rgb), 0.6); line-height: 2; }
+.menu-foot {
+  margin-top: 48px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  /* 元 0.45。11px の注記で 3.9 しか出ないため 0.72 に引き上げ。 */
+  color: rgba(var(--light-rgb), 0.72);
+  text-align: center;
+}
+
+/* ============================================================
+   ACCESS
+   renderVals: accessWrap / accessInfo / accessImg / accessImgBg
+   ============================================================ */
+.access-wrap {
+  display: flex;
+  flex-direction: column;               /* mob */
+  gap: 64px;
+  align-items: center;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+@media (min-width: 768px) { .access-wrap { flex-direction: row; } }
+
+.access-info {
+  width: 100%;                          /* mob */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.access-media { width: 100%; }
+@media (min-width: 768px) {
+  .access-info  { width: 34%; }
+  .access-media { width: 66%; }
+}
+
+.access-head {
+  font-family: var(--font-en);
+  font-weight: 400;
+  color: var(--gold);
+  font-size: 34px;
+  margin: 0 0 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+.access-head .head-main { font-style: italic; }
+
+.access-dl {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+}
+.access-row { border-bottom: 1px solid rgba(var(--gold-rgb), 0.2); padding-bottom: 16px; }
+.access-row dt { font-family: var(--font-en); color: var(--gold); margin-bottom: 8px; }
+.access-row dd { margin: 0; line-height: 2; }
+
+.access-photo {
+  border: var(--gold-border);
+  padding: 8px;
+  background: var(--deep);              /* accessImgBg = deep */
+}
+.access-photo img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  filter: brightness(0.8) contrast(1.25);
+}
+.access-map { margin-top: 24px; border: var(--gold-border); padding: 8px; background: var(--deep); }
+.access-map iframe { display: block; width: 100%; height: 320px; border: 0; filter: grayscale(0.2); }
+
+/* ============================================================
+   RESERVE
+   renderVals: reserveCard → .reserve-card
+   ============================================================ */
+.reserve-card {
+  border: var(--gold-border);
+  padding: 48px 32px;                   /* mob */
+  text-align: center;
+  max-width: 768px;
+  width: 100%;
+  background: var(--deep);
+  position: relative;
+  z-index: 10;
+}
+@media (min-width: 768px) { .reserve-card { padding: 96px; } }
+
+/* 四辺中央の線 */
+.edge { position: absolute; background: var(--gold); }
+.edge-t { top: 0;    left: 50%; transform: translateX(-50%); width: 48px; height: 1px; }
+.edge-b { bottom: 0; left: 50%; transform: translateX(-50%); width: 48px; height: 1px; }
+.edge-l { left: 0;   top: 50%;  transform: translateY(-50%); width: 1px; height: 48px; }
+.edge-r { right: 0;  top: 50%;  transform: translateY(-50%); width: 1px; height: 48px; }
+
+.reserve-title {
+  font-family: var(--font-en);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--gold);
+  font-size: 32px;                      /* mob（元は 44px 固定。狭幅で溢れるため縮めた） */
+  margin: 0 0 32px;
+  letter-spacing: 0.15em;
+}
+@media (min-width: 768px) { .reserve-title { font-size: 44px; } }
+
+.reserve-text {
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  color: rgba(var(--light-rgb), 0.8);
+  line-height: 2;
+  margin: 0 0 48px;
+}
+.btn-reserve-lg {
+  display: inline-block;
+  background: var(--btn);
+  color: var(--light);
+  padding: 16px 48px;
+  letter-spacing: 0.2em;
+  transition: background .3s;
+}
+.btn-reserve-lg:hover { background: var(--gold); color: var(--light); }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.site-footer {
+  background: var(--darker);
+  padding: 48px 24px;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  /* 元 0.4。12px で 3.5 しか出ないため 0.7 に引き上げ。 */
+  color: rgba(var(--light-rgb), 0.7);
+}
+
+/* ============ 制作クレジット帯（スズメデザイン） ============ */
+.studio-credit {
+  background: color-mix(in srgb, var(--darker), black 12%);
+  border-top: var(--gold-hair);
+}
+.studio-credit__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 26px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px 32px;
+}
+.studio-credit__text { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.studio-credit__lead {
+  font-family: var(--font-en);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: rgba(var(--gold-rgb), 0.8);
+}
+.studio-credit__name {
+  font-family: var(--font-jp);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--light);
+}
+.studio-credit__btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
+  padding: 12px 28px;
+  font-family: var(--font-en);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-decoration: none;
+  color: var(--light);
+  border: var(--gold-border);
+  transition: background .3s, color .3s;
+}
+.studio-credit__btn::after { content: "\2197"; font-size: 10px; }
+.studio-credit__btn:hover,
+.studio-credit__btn:focus-visible { background: var(--gold); color: var(--darker); }
+@media (max-width: 640px) {
+  .studio-credit__inner { flex-direction: column; align-items: flex-start; }
+  .studio-credit__btn { width: 100%; justify-content: center; }
+}
+
+
+/* ★狭い画面での横あふれ対策（2026-10-06）
+   body だけ overflow-x: hidden にすると html 側は visible のままなので、
+   iOS Safari ではページが横スクロールでき、右側に地色の帯（余白）が出る。
+   html にも掛ける必要があるが、hidden はスクロールコンテナを作るため
+   position: sticky のヘッダーが効かなくなる。clip は作らないので安全。 */
+@supports (overflow: clip) {
+  html, body { overflow-x: clip; }
+}
+
+
+/* ============================================================
+   ramuuu. 調整ブロック（planC の明暗反転にともなう上書き）
+   ============================================================ */
+
+.sec-light { background: var(--sec-light-bg); color: var(--light); }
+.sec-light .head-sub { color: rgba(var(--light-rgb), 0.78); }
+.btn-reserve, .btn-reserve-lg { color: #FFFFFF; }
+.btn-reserve:hover, .btn-reserve-lg:hover { background: var(--gold); color: #FFFFFF; }
+.reserve-card { background: var(--white); box-shadow: var(--shadow-card); }
+
+/* 明色地なので、planC 既定の暗くするフィルタは外す */
+.hero-bg img { filter: contrast(1.03) saturate(1.02); }
+.about-photo-frame img { filter: none; }
+.access-photo img { filter: contrast(1.03); }
+.style-card-frame img { filter: none; }
+
+/* 12px の小さな文字は 0.6 だと淡地で 4.5 に届かないため 0.74 に上げる */
+.cap-ja, .menu-item-note, .menu-item-price span { color: rgba(var(--light-rgb), 0.74); }
+
+/* ---- ロゴ（支給JPGの白地を抜いて透過PNG化。原寸 667x173）---- */
+.brand--logo { display: flex; align-items: center; }
+.brand--logo img { display: block; width: 116px; height: auto; }
+@media (min-width: 860px) { .brand--logo img { width: 138px; } }
+
+.hero-logo { margin: 0; line-height: 0; }
+.hero-logo img { display: block; width: min(100%, 300px); height: auto; margin: 0 auto; }
+@media (min-width: 768px) { .hero-logo img { width: min(100%, 380px); } }
+
+.hero-sub {
+  font-family: var(--font-jp); font-size: 12px;
+  letter-spacing: 0.3em; text-indent: 0.3em;
+  color: rgba(var(--light-rgb), 0.84);
+  margin: 0; text-align: center;
+}
+.hero-frame {
+  background: rgba(255, 255, 255, 0.5);
+  padding: 36px 28px;
+}
+@media (min-width: 768px) { .hero-frame { padding: 60px 56px; } }
+.hero-frame-inner { gap: 26px; }
+.hero-vert { color: rgba(var(--light-rgb), 0.88); }
+
+/* ---- ABOUT の補足 ---- */
+.photo-cap, .about-rating {
+  margin-top: 14px;
+  font-size: 12px; line-height: 1.9; letter-spacing: 0.06em;
+  color: rgba(var(--light-rgb), 0.74);
+  text-align: center;
+}
+.about-rating { margin-top: 44px; font-size: 12.5px; }
+.rating-note { display: block; margin-top: 6px; font-size: 11.5px; }
+
+.feature-row {
+  list-style: none; margin: 56px auto 0; padding: 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  max-width: 760px; width: 100%;
+  background: rgba(var(--gray-rgb), 0.9);
+  border: 1px solid rgba(var(--gray-rgb), 0.9);
+}
+@media (min-width: 760px) { .feature-row { grid-template-columns: repeat(4, 1fr); } }
+.feature-row li {
+  background: var(--sec-light-bg);
+  padding: 22px 12px; text-align: center;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.ft-en { font-family: var(--font-en); font-size: 15px; color: var(--gold); letter-spacing: 0.08em; }
+.ft-ja { font-size: 12px; line-height: 1.7; color: rgba(var(--light-rgb), 0.84); }
+
+/* ---- STAFF（planC には無いセクション。写真が4名分あるため新設）---- */
+.sec-inner--staff { max-width: 1100px; }
+.staff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr));
+  gap: 40px 32px;
+}
+.staff-card { text-align: center; }
+.staff-photo {
+  border: var(--gold-border); padding: 8px; background: var(--white);
+  margin-bottom: 20px;
+}
+.staff-photo img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
+.staff-photo--nodata {
+  aspect-ratio: 3 / 4;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(var(--gray-rgb), 0.35);
+}
+.staff-photo--nodata span {
+  font-family: var(--font-en); font-size: 13px; letter-spacing: 0.18em;
+  color: rgba(var(--light-rgb), 0.74);
+}
+.staff-role { font-family: var(--font-en); font-size: 12px; letter-spacing: 0.12em; color: var(--gold); }
+.staff-name { font-size: 18px; font-weight: 400; letter-spacing: 0.1em; margin: 8px 0 12px; }
+.staff-desc { font-size: 12.5px; line-height: 1.95; color: rgba(var(--light-rgb), 0.82); text-align: left; }
+.staff-src { display: block; margin-top: 8px; font-size: 11.5px; color: rgba(var(--light-rgb), 0.74); }
+
+/* ---- MENU：掲載が37件あるのでグループ見出しを入れ、広い画面では2列 ---- */
+.menu-group {
+  font-family: var(--font-en);
+  font-size: 15px; font-weight: 400; letter-spacing: 0.22em;
+  color: var(--gold);
+  margin: 48px 0 24px; padding-bottom: 10px;
+  border-bottom: 1px solid rgba(var(--gold-rgb), 0.35);
+}
+.menu-group:first-of-type { margin-top: 0; }
+.menu-list { gap: 26px; }
+.menu-item-head { align-items: baseline; }
+.menu-item-title { line-height: 1.6; }
+.menu-rank {
+  display: inline-block; margin-left: 8px;
+  font-family: var(--font-jp); font-size: 11px; letter-spacing: 0.04em;
+  color: rgba(var(--light-rgb), 0.78);
+  border: 1px solid rgba(var(--gold-rgb), 0.5);
+  border-radius: 2px; padding: 2px 8px; white-space: nowrap;
+}
+.menu-foot { line-height: 2; }
+@media (min-width: 768px) {
+  .menu-list { display: grid; grid-template-columns: 1fr 1fr; column-gap: 48px; row-gap: 26px; }
+}
+@media (max-width: 420px) {
+  .menu-item-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .menu-rank { margin-left: 0; margin-top: 6px; white-space: normal; }
+}
+
+.dd-note {
+  display: block; margin-top: 6px;
+  font-size: 12px; line-height: 1.9; letter-spacing: 0.04em;
+  color: rgba(var(--light-rgb), 0.74);
+}
+
+/* ---- フッター（暗）と制作クレジット帯（明）---- */
+.site-footer { background: var(--footer-bg); color: rgba(255, 255, 255, 0.78); }
+
+.studio-credit {
+  background: #F2F5FA;
+  border-top: 2px solid var(--gold);
+}
+.studio-credit__lead { color: #5A6075; }   /* 帯地に対し 5.71 */
+.studio-credit__name { color: #232736; }   /* 帯地に対し 13.58 */
+.studio-credit__btn {
+  color: #FFFFFF;
+  background: #817303;                      /* サイト内ボタン #8A4A22 と ΔE 35.7 */
+  border: 1px solid #817303;
+}
+.studio-credit__btn:hover,
+.studio-credit__btn:focus-visible { background: #5E5402; border-color: #5E5402; color: #FFFFFF; }
+
+/* スタッフは5名。auto-fit だと 1280px で 4列＋1列になり最後の1枚が浮くため、
+   1040px 以上では5列に固定して1行に収める。 */
+@media (min-width: 1040px) { .staff-grid { grid-template-columns: repeat(5, 1fr); } }
+
+
+/* MENU セクションの予約ボタン（2026-11-05 追加）
+   planC の MENU にはもともと CTA が無く、ヘッダーのボタンだけだった。
+   ヘッダーと MENU の2か所に予約導線を置く方針にそろえている。 */
+.menu-cta { margin-top: 56px; text-align: center; }
+@media (max-width: 380px) {
+  .menu-cta .btn-reserve-lg { padding: 16px 20px; letter-spacing: 0.12em; }
+}
+
+
+/* 縦組みの中の半角数字は、そのままだと時計回りに90度倒れる。
+   縦中横（text-combine-upright）で正立させる。2桁までを1マスに収める。
+   縦組みのブロックに数字を書くときは必ず <span class="tcy">…</span> で囲む。 */
+.hero-vert .tcy,
+.about-vert .tcy,
+.vert .tcy {
+  -webkit-text-combine: horizontal;   /* 旧 WebKit */
+  text-combine-upright: all;
+}
